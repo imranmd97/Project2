@@ -1,0 +1,77 @@
+from tika import parser
+import pdb
+import re
+from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
+from pdfminer.converter import TextConverter
+from pdfminer.layout import LAParams
+from pdfminer.pdfpage import PDFPage
+from io import StringIO
+import pdb
+import csv
+csv_file = open('patent.csv','a')
+writer = csv.writer(csv_file)
+writer.writerow(('Patent No.','Date of Patent','Inventors','Assignee','Notice','Appl. No.','Filed','ABSTRACT','Related U.S. Application Data'))
+file1 = 'patent.pdf'
+file_data = parser.from_file(file1)
+text = file_data['content']
+data1 = text.strip('\n')
+data  = data1.splitlines()
+flag = False
+for i in data:
+    if ':' in i:
+       data2 = (i.split(':'))
+       print(data2)
+       if '(10) Patent No.' in i:
+          a = (data2[1])
+       if 'Date of Patent' in i:
+          b = (data2[1])
+       if '(75) Inventors' in i:
+          c = (data2)
+          #print(c)
+       if '(73) Assignee' in i:
+          d = (data2[1])
+          #print(d)
+       if '( c ) Notice' in i:
+          e = (data2[1])
+       if '(21) Appl. No.' in i:
+          f = (data2[1])
+       if '(22) Filed' in i:
+          g = (data2[1])
+         
+
+rsrcmgr = PDFResourceManager()
+retstr = StringIO()
+codec = 'utf-8'
+laparams = LAParams()
+device = TextConverter(rsrcmgr, retstr, laparams=laparams)
+fp = open('patent.pdf', 'rb')
+interpreter = PDFPageInterpreter(rsrcmgr, device)
+for page in PDFPage.get_pages(fp):
+    interpreter.process_page(page)
+    text = retstr.getvalue()
+data = (text.splitlines())
+for i in data:
+    if ':' in i:
+       print(i.split(':'))
+flag = False
+data5 = []
+for i in data :
+    if flag:
+       data5.append(i)
+    if i ==   'ABSTRACT ':
+        flag = True
+       
+    if i.startswith('28 Claims, 5 Drawing Sheets '):
+       flag = False
+
+flag = False
+data6 = []
+for i in data :
+    if flag:
+       data6.append(i)
+    if i ==    'Related U.S. Application Data ':
+        flag = True
+       
+    if i.startswith('1, 2002. '):
+       flag = False
+       writer.writerow((a,b,c,d,e,f,g,data5,data6))
